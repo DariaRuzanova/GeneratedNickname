@@ -2,73 +2,57 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-
 public class Main {
-    static AtomicInteger[] counter3;
-    static AtomicInteger[] counter4;
-    static AtomicInteger[] counter5;
+    static AtomicInteger counter3;
+    static AtomicInteger counter4;
+    static AtomicInteger counter5;
     static int WORDCOUNT = 100_000;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         Random random = new Random();
         String[] texts = new String[WORDCOUNT];
         for (int i = 0; i < texts.length; i++) {
             texts[i] = generateText("abc", 3 + random.nextInt(3));
         }
 
-//        String[] texts = new String[]{"aaa"};
-
-        counter3 = new AtomicInteger[WORDCOUNT];
-        counter4 = new AtomicInteger[WORDCOUNT];
-        counter5 = new AtomicInteger[WORDCOUNT];
-        for (int i = 0; i < WORDCOUNT; i++) {
-            counter3[i] = new AtomicInteger(0);
-            counter4[i] = new AtomicInteger(0);
-            counter5[i] = new AtomicInteger(0);
-        }
+        counter3 = new AtomicInteger(0);
+        counter4 = new AtomicInteger(0);
+        counter5 = new AtomicInteger(0);
 
         Thread thread1 = new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                if (isPalindrome(texts[i])) {
-                    addCounter(i, texts[i]);
+            for (String text : texts) {
+                if (isPalindrome(text)) {
+                    addCounter(text);
                 }
             }
         });
         thread1.start();
 
         Thread thread2 = new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                if (isOneChar(texts[i])) {
-                    addCounter(i, texts[i]);
+            for (String text : texts) {
+                if (isOneChar(text)) {
+                    addCounter(text);
                 }
             }
         });
         thread2.start();
 
         Thread thread3 = new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                if (isSorted(texts[i])) {
-                    addCounter(i, texts[i]);
+            for (String text : texts) {
+                if (isSorted(text)) {
+                    addCounter(text);
                 }
             }
         });
         thread3.start();
 
-        try {
-            thread1.join();
-            thread2.join();
-            thread3.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        thread1.join();
+        thread2.join();
+        thread3.join();
 
-        long s3 = Arrays.stream(counter3).filter(x -> x.get() != 0).count();
-        long s4 = Arrays.stream(counter4).filter(x -> x.get() != 0).count();
-        long s5 = Arrays.stream(counter5).filter(x -> x.get() != 0).count();
-
-        System.out.printf("Красивых слов с длиной 3: %d шт\n", s3);
-        System.out.printf("Красивых слов с длиной 4: %d шт\n", s4);
-        System.out.printf("Красивых слов с длиной 5: %d шт\n", s5);
+        System.out.println("Красивых слов с длиной 3: " + counter3 + " шт");
+        System.out.println("Красивых слов с длиной 4: " + counter4 + " шт");
+        System.out.println("Красивых слов с длиной 5: " + counter5 + " шт");
 
     }
 
@@ -89,11 +73,11 @@ public class Main {
         return text.equals(textReverse);
     }
 
-    public static void addCounter(int position, String text) {
+    public static void addCounter(String text) {
         int lengthText = text.length();
-        if (lengthText == 3) counter3[position].set(1);
-        if (lengthText == 4) counter4[position].set(1);
-        if (lengthText == 5) counter5[position].set(1);
+        if (lengthText == 3) counter3.getAndIncrement();
+        if (lengthText == 4) counter4.getAndIncrement();
+        if (lengthText == 5) counter5.getAndIncrement();
     }
 
     public static String generateText(String letters, int length) {
